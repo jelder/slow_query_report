@@ -22,9 +22,8 @@ my $top = 0;
 my $regex = '';
 
 # Used for distinguishing between local and remote queries.
-hostname =~ /^([\w_-]*)\..*/;
-my @local = (hostname, $1, 'localhost', 'localhost.localdomain');
-my ($show_local,$show_remote) = (1, 1,);
+my @local = (hostname, 'localhost', 'localhost.localdomain');
+my ($show_local,$show_remote) = (1, 1);
 
 # Used for detecting when it is safe to strip domain from hostnames.
 my $strip_domains = -1;
@@ -119,9 +118,8 @@ sub merge (\%$) {
     if ($regex) { return unless $query =~ m/$regex/sim; }
     
     my $query_generic = $query;    # This is our ID.
-    $query_generic =~ s/\d+/XXX/g;
-    $query_generic =~ s/([\'\"]).+?([\'\"])/$1XXX$2/g;
-    # The previous two patterns were from retards.org.
+    $query_generic =~ s/\d+/\?/g;
+    $query_generic =~ s/([\'\"]).+?([\'\"])/$1\?$2/g;
 
     # Push all query metadata into %records.
     for my $field (@numeric_fields, @string_fields) {
@@ -224,7 +222,7 @@ if ($squelch) {
 
 print "# Looking for m/$regex/sim.\n" if $regex;
 print "# Ignoring queries with $sort_field < $squelch\n" if $squelch;
-print "# Ignoring local queries.\n" unless $show_local;
+print "# Ignoring queries from localhost.\n" unless $show_local;
 print "# Ignoring remote queries.\n" unless $show_remote;
 print '# Showing only ' . join(', ', @show_hosts) . ".\n" if @show_hosts;
 print '# Ignoring ' . join(', ', @hide_hosts) . ".\n" if @hide_hosts;
@@ -245,7 +243,7 @@ my $records_last = $records_times[-1];
 my $top_counter;
 
 print "# Found $records_count quer", $records_count > 1 ? 'ies' : 'y',
-    " between $records_first and $records_last",
+    " after normalization, occuring between $records_first and $records_last",
     $top ? ", showing top $top." : '.', "\n";
 print "\n";
 

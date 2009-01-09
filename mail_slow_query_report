@@ -1,0 +1,30 @@
+#!/bin/bash
+# Email a report to addresses passed on the command line.
+# This works best when in sync with log rotation. Run on weekends with 7 days of logs.
+mailto=$1
+parser=/usr/local/bin/slow_query_report
+mycnf=/etc/mysql/my.cnf
+
+if [ -z "${mailto}" ] ; then
+	echo "Usage: $0 ADDRESS"
+	exit 75
+fi
+
+if ! [ -f ${mycnf} ] ; then
+	echo ${mycnf}: Not found.
+fi
+
+log_slow_queries=`awk -F " = " '$1 == "log_slow_queries" { print $2 }' ${mycnf}`
+hostname=`hostname -s`
+data=`mktemp`
+report=`mktemp`
+trap 'rm -f ${report} ${data}' INT EXIT
+
+( zcat ${log_slow_queries}.?.gz ; cat ${log_slow_queries} ) > ${data}
+
+${parser} --top 5 < ${data} >> ${report} || exit 1
+
+if [ `wc -l < ${report}` -ge 20 ] ; then
+	mail -s "Slow Query Report for ${hostname}" $mailto < ${report}
+fi
+
