@@ -220,20 +220,20 @@ if ($squelch) {
     }
 }
 
-print "# Looking for m/$regex/sim.\n" if $regex;
-print "# Ignoring queries with $sort_field < $squelch\n" if $squelch;
-print "# Ignoring queries from localhost.\n" unless $show_local;
-print "# Ignoring remote queries.\n" unless $show_remote;
-print '# Showing only ' . join(', ', @show_hosts) . ".\n" if @show_hosts;
-print '# Ignoring ' . join(', ', @hide_hosts) . ".\n" if @hide_hosts;
-print '# Showing only ' .(join ', ', @show_users) . ".\n" if @show_users;
-print '# Ignoring ' . join(', ', @hide_users) . ".\n" if @hide_users;
-print '# Showing only ' . join(', ', @show_databases) . ".\n" if @show_databases;
-print '# Ignoring ' . join(', ', @hide_databases) . ".\n" if @hide_databases;
+print "Looking for m/$regex/sim.\n" if $regex;
+print "Ignoring queries with $sort_field < $squelch\n" if $squelch;
+print "Ignoring queries from localhost.\n" unless $show_local;
+print "Ignoring remote queries.\n" unless $show_remote;
+print 'Showing only ' . join(', ', @show_hosts) . ".\n" if @show_hosts;
+print 'Ignoring ' . join(', ', @hide_hosts) . ".\n" if @hide_hosts;
+print 'Showing only ' .(join ', ', @show_users) . ".\n" if @show_users;
+print 'Ignoring ' . join(', ', @hide_users) . ".\n" if @hide_users;
+print 'Showing only ' . join(', ', @show_databases) . ".\n" if @show_databases;
+print 'Ignoring ' . join(', ', @hide_databases) . ".\n" if @hide_databases;
 
 my $records_count = scalar keys %records;
 if ($records_count == 0) {
-    print "# No problem queries found.\n";
+    print "No problem queries found.\n";
     exit;
 }
 
@@ -242,9 +242,9 @@ my $records_first = $records_times[0];
 my $records_last = $records_times[-1];
 my $top_counter;
 
-print "# Found $records_count quer", $records_count > 1 ? 'ies' : 'y',
-    " after normalization, occuring between $records_first and $records_last",
-    $top ? ", showing top $top." : '.', "\n";
+print "Found problematic $records_count quer", $records_count > 1 ? 'ies' : 'y',
+    " after normalization, occuring between $records_first and $records_last.",
+    $top ? " Showing top $top." : '', "\n";
 print "\n";
 
 for my $query (sort {$records{$b}{$sort_field} <=> $records{$a}{$sort_field}} keys %records) {
