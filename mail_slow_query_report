@@ -25,6 +25,6 @@ trap 'rm -f ${report} ${data}' INT EXIT
 ${parser} --top 5 < ${data} >> ${report} || exit 1
 
 if [ `wc -l < ${report}` -ge 20 ] ; then
-	mail -s "Slow Query Report for ${hostname}" $mailto < ${report}
+	mail -s "Weekly Slow Query Report for ${hostname}" $mailto < ${report}
 fi
 

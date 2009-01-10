@@ -242,7 +242,7 @@ my $records_first = $records_times[0];
 my $records_last = $records_times[-1];
 my $top_counter;
 
-print "Found problematic $records_count quer", $records_count > 1 ? 'ies' : 'y',
+print "Found $records_count problematic quer", $records_count > 1 ? 'ies' : 'y',
     " after normalization, occuring between $records_first and $records_last.",
     $top ? " Showing top $top." : '', "\n";
 print "\n";
