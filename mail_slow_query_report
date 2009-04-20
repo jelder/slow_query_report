@@ -14,7 +14,11 @@ if ! [ -f ${mycnf} ] ; then
 	echo ${mycnf}: Not found.
 fi
 
-log_slow_queries=`awk -F " = " '$1 == "log_slow_queries" { print $2 }' ${mycnf}`
+includedir=`awk '/^!includedir/ { print $2}' ${mycnf}`
+if [ ! -z "${includedir}" ] ; then
+    mycnf=`echo ${includedir}/* ${mycnf}`
+fi
+log_slow_queries=`cat ${mycnf} | awk -F " = " '$1 == "log_slow_queries" { print $2 }'`
 hostname=`hostname -s`
 data=`mktemp`
 report=`mktemp`
