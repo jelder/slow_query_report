@@ -12,6 +12,7 @@ fi
 
 if ! [ -f ${mycnf} ] ; then
 	echo ${mycnf}: Not found.
+    exit 75
 fi
 
 includedir=`awk '/^!includedir/ { print $2}' ${mycnf}`
@@ -19,7 +20,11 @@ if [ ! -z "${includedir}" ] ; then
     mycnf=`echo ${includedir}/* ${mycnf}`
 fi
 log_slow_queries=`cat ${mycnf} | awk -F " = " '$1 == "log_slow_queries" { print $2 }'`
-hostname=`hostname -s`
+if [ `uname -s` == "Linux" ] ; then
+    hostname=`hostname --fqdn`
+else
+    hostname=`hostname`
+fi
 data=`mktemp`
 report=`mktemp`
 trap 'rm -f ${report} ${data}' INT EXIT
