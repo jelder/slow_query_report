@@ -28,6 +28,6 @@ This tool makes it a lot easier to stay on top of MySQL performance, especially 
     Valid sort fields include:
     Query_seconds_min Query_seconds_max Query_seconds_average Query_seconds_total Lock_time_min Lock_time_max Lock_time_average Lock_time_total Rows_sent_min Rows_sent_max Rows_sent_average Rows_sent_total Rows_examined_min Rows_examined_max Rows_examined_average Rows_examined_total 
 
-Assuming your slow query log gets rotated every day and you keep 7 days of history, the included `mail_slow_query_report` wrapper script can send your whole dev team a list of trouble spots, your five worst queries, each Monday. The email won't go out unless the report is long enough to warrant attention. It won't cry wolf:
+Assuming your slow query log gets rotated every day and you keep 7 days of history, the included `mail_slow_query_report` wrapper script can send your whole dev team a list of trouble spots, your five worst queries, each Monday. The email won't go out unless the report is long enough to warrant attention; it won't cry wolf:
 
 `0 7 * * Mon mysql /usr/local/bin/mail_slow_query_report eng@example.com`
