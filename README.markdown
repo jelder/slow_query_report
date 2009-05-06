@@ -1,7 +1,7 @@
 Slow Query Report
 =================
 
-This tool makes it a lot easier to stay on top of database performance, especially where use of ORM makes running an EXPLAIN on each query before hand impossible. 
+This tool makes it a lot easier to stay on top of MySQL performance, especially where use of ORM makes running an EXPLAIN on each query before hand impossible. 
 
     Usage: slow_query_report [OPTIONS]
 
