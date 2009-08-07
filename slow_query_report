@@ -57,8 +57,8 @@ The --regex option is treated like m/foo/sim.
 
 Valid sort fields include:
 END
-    my @extra_fields;
-    push @extra_fields, $_.'_min', $_.'_max', $_.'_median', $_.'_total' for @numeric_fields;
+    my @extra_fields = qw(score);
+    push @extra_fields, $_.'_min', $_.'_median', $_.'_p95', $_.'_max', $_.'_total' for @numeric_fields;
     print join ' ', @extra_fields, "\n";
     exit 75;
 }
@@ -212,13 +212,12 @@ for my $query (keys %records) {
     if ($strip_domains == 1 && $domain) {
         s/$domain// for @{$records{$query}{'host'}};
     }
-    # The score is calculated as 95th percentile of query seconds multiplied by number of occurences
-    print STDERR <<END;
-count: $records{$query}{'count'}
-p95: $records{$query}{'Query_seconds_p95'}
 
-END
-    $records{$query}{'score'} = $records{$query}{'count'} * $records{$query}{'Query_seconds_p95'}; 
+    # The score is the product of total occurences and 95th percentile of query seconds 
+    $records{$query}{'score'} = 
+        $records{$query}{'count'} *
+        $records{$query}{'Rows_examined_p95'} *
+        $records{$query}{'Query_seconds_p95'}; 
 }
 
 if ($squelch) {
