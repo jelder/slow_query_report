@@ -3,6 +3,7 @@
 # Jacob Elder <jacob.elder@gmail.com>
 use strict;
 use warnings;
+use Statistics::Descriptive;
 use Getopt::Long;
 use Sys::Hostname;
 use Data::Dumper;
@@ -10,7 +11,7 @@ use Data::Dumper;
 # Different ways to slice up the data;
 my @numeric_fields = qw(Query_seconds Lock_time Rows_sent Rows_examined);
 my @string_fields = qw(database host user ip);
-my $sort_field = 'Query_seconds_total';
+my $sort_field = 'score';
 my @show_hosts = ();
 my @hide_hosts = ();
 my @show_users = ();
@@ -57,7 +58,7 @@ The --regex option is treated like m/foo/sim.
 Valid sort fields include:
 END
     my @extra_fields;
-    push @extra_fields, $_.'_min', $_.'_max', $_.'_average', $_.'_total' for @numeric_fields;
+    push @extra_fields, $_.'_min', $_.'_max', $_.'_median', $_.'_total' for @numeric_fields;
     print join ' ', @extra_fields, "\n";
     exit 75;
 }
@@ -186,17 +187,16 @@ while (<>) {
 }
 
 for my $query (keys %records) {
-    # Add a total, min, max, and average field for each numeric field.
+    # Add a total, min, max, and median field for each numeric field.
     for my $field (@numeric_fields) {
-        my @values = sort {$a <=> $b} @{$records{$query}{$field}};
-        my ($min, $max, $average, $total)
-            = ($values[0], $values[-1], 0, 0);
-        $total += $_ for @values;
-        $average = sprintf '%.2f', $total / @values;
-        $records{$query}{$field.'_min'} = $min; 
-        $records{$query}{$field.'_max'} = $max; 
-        $records{$query}{$field.'_average'} = $average; 
-        $records{$query}{$field.'_total'} = $total; 
+        my $stat = Statistics::Descriptive::Full->new;
+        $stat->add_data(@{$records{$query}{$field}});
+        $records{$query}{$field.'_min'} = $stat->min; 
+        $records{$query}{$field.'_median'} = $stat->median(); 
+        $records{$query}{$field.'_p95'} = ($stat->percentile(95))[0] || 0;
+        $records{$query}{$field.'_max'} = $stat->max; 
+        $records{$query}{$field.'_total'} = $stat->sum(); 
+
     }
     # Make string fields contain only unique values.
     for my $field (@string_fields) {
@@ -212,6 +212,13 @@ for my $query (keys %records) {
     if ($strip_domains == 1 && $domain) {
         s/$domain// for @{$records{$query}{'host'}};
     }
+    # The score is calculated as 95th percentile of query seconds multiplied by number of occurences
+    print STDERR <<END;
+count: $records{$query}{'count'}
+p95: $records{$query}{'Query_seconds_p95'}
+
+END
+    $records{$query}{'score'} = $records{$query}{'count'} * $records{$query}{'Query_seconds_p95'}; 
 }
 
 if ($squelch) {
@@ -249,21 +256,23 @@ print "\n";
 
 for my $query (sort {$records{$b}{$sort_field} <=> $records{$a}{$sort_field}} keys %records) {
     for my $field (@numeric_fields) {
-        my ($min, $max, $average, $total) = (
+        my ($min, $median, $p95, $max, $total) = (
             $records{$query}{$field.'_min'},
+            $records{$query}{$field.'_median'},
+            $records{$query}{$field.'_p95'},
             $records{$query}{$field.'_max'},
-            $records{$query}{$field.'_average'},
             $records{$query}{$field.'_total'}
         );
         if ($min == $max) {
             print "# $field: $min\n";
         } else {
-            print "# $field: min=$min average=$average max=$max total=$total\n";
+            print "# $field: min=$min median=$median max=$max p95=$p95 total=$total\n";
         } 
     }
-    print "# Host: "    . join(', ', @{$records{$query}{'host'}})     . "\n";
+    print "# Score: $records{$query}{'score'}\n";
+    print "# Host: "        . join(', ', @{$records{$query}{'host'}})     . "\n";
     print "# Database: "    . join(', ', @{$records{$query}{'database'}})    . "\n";
-    print "# User: "    . join(', ', @{$records{$query}{'user'}})    . "\n";
+    print "# User: "        . join(', ', @{$records{$query}{'user'}})    . "\n";
     if ($records{$query}{'count'} == 1) {
         print "# Query:\n$records{$query}{'query_example'}\n\n";
     } elsif ($records{$query}{'constant'} == 1) {
