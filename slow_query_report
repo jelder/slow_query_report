@@ -213,11 +213,19 @@ for my $query (keys %records) {
         s/$domain// for @{$records{$query}{'host'}};
     }
 
-    # The score is the product of total occurences and 95th percentile of query seconds 
-    $records{$query}{'score'} = 
-        $records{$query}{'count'} *
-        $records{$query}{'Rows_examined_p95'} *
-        $records{$query}{'Query_seconds_p95'}; 
+    # The score calculation is a work in progress. 
+    # TODO: Should these components be individually weighted?
+    $records{$query}{'score'} = 1;
+    my @score_components = (
+        $records{$query}{'count'},
+        $records{$query}{'Query_seconds_total'},
+        $records{$query}{'Lock_time_total'},
+        $records{$query}{'Rows_examined_p95'},
+        $records{$query}{'Query_seconds_p95'},
+    );
+    for (@score_components) {
+        $records{$query}{'score'} *= ( $_ || 1 ); # Any of these may be zero or undefined
+    }
 }
 
 if ($squelch) {
