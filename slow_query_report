@@ -1,6 +1,20 @@
 #!/usr/bin/perl
 # slow_query_report
 # Jacob Elder <jacob.elder@gmail.com>
+# GPL
+
+# This structure defines how a score is assigned to each query. Most people will find something to tweak here. All numeric fields in the log expand into _min, _mean, _p95 (95th precentile), _max and _total, in addition to count. It's not currently possible (though planned) to let you include the string fields in score calculation. Suggestions for better defaults are welcome. 
+my %numeric_weight = (
+    count => 2.5,
+    local => -2.5,
+    Lock_time_total => 0.25,
+    Rows_examined_p95 => 0.25,
+    Query_seconds_p95 => 1.5,
+    Query_seconds_total => 2.0,
+);
+
+# You probably won't need to change anything below this line. 
+
 use strict;
 use warnings;
 use Statistics::Descriptive;
@@ -106,8 +120,10 @@ sub merge (\%$) {
 
     # Handle all the different ways we can slice this up.
     if (grep { $fields->{'host'} eq $_ } @local) {
+        $fields{'local'} = 1;
         return unless $show_local;
     } else {
+        $fields{'local'} = 0;
         return unless $show_remote;
     }
     if (@show_hosts) { return unless grep { $fields->{'host'} eq $_ } @show_hosts }
@@ -213,18 +229,15 @@ for my $query (keys %records) {
         s/$domain// for @{$records{$query}{'host'}};
     }
 
-    # The score calculation is a work in progress. 
-    # TODO: Should these components be individually weighted?
     $records{$query}{'score'} = 1;
-    my @score_components = (
-        $records{$query}{'count'},
-        $records{$query}{'Query_seconds_total'},
-        $records{$query}{'Lock_time_total'},
-        $records{$query}{'Rows_examined_p95'},
-        $records{$query}{'Query_seconds_p95'},
-    );
-    for (@score_components) {
-        $records{$query}{'score'} *= ( $_ || 1 ); # Any of these may be zero or undefined
+    for my $component (keys %numeric_weight) {
+        my $weight = $numeric_weight{$component};
+        $component = $records{$query}{$component};
+        $component = defined($component) ? $component : 0;
+        #print "component: $component\n";
+        #print "weight: $weight\n";
+        #print "\n\n";
+        $records{$query}{'score'} += $component * $weight; 
     }
 }
 
