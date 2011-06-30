@@ -31,3 +31,10 @@ This tool makes it a lot easier to stay on top of MySQL performance, especially 
 Assuming your slow query log gets rotated every day and you keep 7 days of history, the included `mail_slow_query_report` wrapper script can send your whole dev team a list of trouble spots, your five worst queries, each Monday. The email won't go out unless the report is long enough to warrant attention; it won't cry wolf:
 
 `0 7 * * Mon mysql /usr/local/bin/mail_slow_query_report eng@example.com`
+
+For MySQL 5.1 and later:
+
+    [mysqld]
+    slow-query-log = true
+    slow-query-log-file = /var/log/mysql/mysql-slow.log
+    long-query-time = 0.5

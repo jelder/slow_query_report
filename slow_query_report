@@ -188,7 +188,7 @@ while (<>) {
         $fields{'timestamp'} = sprintf("$1/$2/$3 %02d:$5:$6", $4);
     } elsif (m/^# User\@Host: (\w*\[?\w*\]?) \@ ([\w\._-]*) \[([\d.]*)\]/) {
         @fields{qw(user host ip)} = ($1, $2, $3);
-    } elsif (m/^# Query_time: (\d+)\s+Lock_time: (\d+)\s+Rows_sent: (\d+)\s+Rows_examined: (\d+)/) {
+    } elsif (m/^# Query_time: ([\d\.]+)\s+Lock_time: ([\d\.]+)\s+Rows_sent: (\d+)\s+Rows_examined: (\d+)/) {
         @fields{@numeric_fields} = ($1, $2, $3, $4);
     } elsif (m/^use ([\w-]*);/) {    
         $fields{'database'} = $1;
